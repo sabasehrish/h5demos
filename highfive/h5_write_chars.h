@@ -1,3 +1,5 @@
+#ifndef H5_WRITE_CHARS_H
+#define H5_WRITE_CHARS_H
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5DataSpace.hpp>
 #include <highfive/H5DataType.hpp>
@@ -88,4 +90,4 @@ void h5_write_chars(char* rname,
       ++ievt;
   }
 }
-
+#endif

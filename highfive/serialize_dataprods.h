@@ -1,5 +1,5 @@
-#ifndef SERIALIZED_DATAPRODS_H
-#define SERIALIZED_DATAPRODS_H
+#ifndef SERIALIZE_DATAPRODS_H
+#define SERIALIZE_DATAPRODS_H
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
