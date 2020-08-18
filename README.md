@@ -34,38 +34,49 @@ Weekly status updates on this work are [here](https://drive.google.com/drive/fol
 Below is an example output using a small file with 20 events and 7 data products, 
 each data product is serialized into `std::vector<char>` and resulting HDF5 
 schema is creating 2D dataset for each product. 
-This version is missing run and lumi information. 
 ```
-HDF5 "/scratch/ssehrish/pool2.h5" {
+F5 "out.h5" {
 GROUP "/" {
-   DATASET "BranchListIndexes" {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 18 ) / ( H5S_UNLIMITED, 18 ) }
+   GROUP "run" {
+      ATTRIBUTE "run_num" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SCALAR
+      }
+      GROUP "lumi" {
+         ATTRIBUTE "lumi_num" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SCALAR
+         }
+         DATASET "BranchListIndexes" {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 18 ) / ( H5S_UNLIMITED, 18 ) }
+         }
+         DATASET "EventAuxiliary" {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 135 ) / ( H5S_UNLIMITED, 135 ) }
+         }
+         DATASET "EventProductProvenance" {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 42 ) / ( H5S_UNLIMITED, 42 ) }
+         }
+         DATASET "EventSelections" {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 41 ) / ( H5S_UNLIMITED, 41 ) }
+         }
+         DATASET "edmTriggerResults_TriggerResults__TESTOUTPUT." {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 90 ) / ( H5S_UNLIMITED, 90 ) }
+         }
+         DATASET "edmtestOtherThings_OtherThing_testUserTag_TESTOUTPUT." {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 6472 ) / ( H5S_UNLIMITED, 6472 ) }
+         }
+         DATASET "edmtestThings_Thing__TESTOUTPUT." {
+            DATATYPE  H5T_STD_I8LE
+            DATASPACE  SIMPLE { ( 20, 111 ) / ( H5S_UNLIMITED, 111 ) }
+         }
+      }
    }
-   DATASET "EventAuxiliary" {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 135 ) / ( H5S_UNLIMITED, 135 ) }
-   }
-   DATASET "EventProductProvenance" {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 42 ) / ( H5S_UNLIMITED, 42 ) }
-   }
-   DATASET "EventSelections" {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 41 ) / ( H5S_UNLIMITED, 41 ) }
-   }
-   DATASET "edmTriggerResults_TriggerResults__TESTOUTPUT." {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 90 ) / ( H5S_UNLIMITED, 90 ) }
-   }
-   DATASET "edmtestOtherThings_OtherThing_testUserTag_TESTOUTPUT." {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 6472 ) / ( H5S_UNLIMITED, 6472 ) }
-   }
-   DATASET "edmtestThings_Thing__TESTOUTPUT." {
-      DATATYPE  H5T_STD_I8LE
-      DATASPACE  SIMPLE { ( 20, 111 ) / ( H5S_UNLIMITED, 111 ) }
-   }
+}
 }
 ```
-}
