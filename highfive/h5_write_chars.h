@@ -28,34 +28,34 @@ write_batch(std::vector<product_t> const& products,
             long unsigned int batch, 
             long unsigned int nbatch, 
             long unsigned int round,
-            std::string const&  outname) 
+            Group lumi) 
 {
-  File file(outname, File::ReadWrite | File::Create);
   auto num_prods = ds_names.size();
   for (int prod_index = 0; prod_index < num_prods; ++prod_index) {
     auto prod_size = products[prod_index].size(); 
-    if(!file.exist(ds_names[prod_index])){ //if dataset doesn't exist, create it otherwise extend it
+    if(!lumi.exist(ds_names[prod_index])){ //if dataset doesn't exist, create it otherwise extend it
       std::cout << "creating dataset for: " << ds_names[prod_index] << "\n";
       DataSetCreateProps props;
       props.add(Chunking(std::vector<hsize_t>{batch, prod_size}));
       DataSpace dataspace = DataSpace({batch, prod_size}, {DataSpace::UNLIMITED, prod_size});
-      DataSet dataset = file.createDataSet<char>(ds_names[prod_index], dataspace, props); 
+      DataSet dataset = lumi.createDataSet<char>(ds_names[prod_index], dataspace, props); 
       dataset.write(get_prods(products, prod_index, num_prods));
       }
     else {
-      DataSet dataset = file.getDataSet(ds_names[prod_index]);
+      DataSet dataset = lumi.getDataSet(ds_names[prod_index]);
       std::cout << "extending dataset for: " << dataset.getPath() << "\n";
       auto offset = batch*round;
       dataset.resize({offset+nbatch, prod_size}); 
       dataset.select({offset, 0}, {nbatch, prod_size}).write(get_prods(products, prod_index, num_prods));
       }
-  file.flush();
   }
 }
 
-void h5_write_chars(char* rname, 
-                    int batch, 
-                    std::string const& outname) {
+void h5_write_ds(char* rname, 
+                 int batch, 
+                 int run_num, 
+                 int lumi_num,
+                 std::string const& outname) {
   auto f = TFile::Open(rname);
   auto e = f->Get<TTree>("Events");
   auto l = e->GetListOfBranches();
@@ -68,6 +68,15 @@ void h5_write_chars(char* rname,
   auto nbatch = 0; // index in the batch 
   auto round = 0;  // number of batches (rounds)
   auto ievt = 0; 
+  
+  File file(outname, File::ReadWrite | File::Create);
+  Group run = file.createGroup("run");
+  Attribute a = run.createAttribute<int>("run_num", DataSpace::From(run_num));
+  a.write(run_num);
+  Group lumi = run.createGroup("lumi");
+  Attribute b = lumi.createAttribute<int>("lumi_num", DataSpace::From(lumi_num));
+  b.write(lumi_num);
+
   //while we have more events, accumulate a batch of events and write that out 
   while (ievt < nevts) {
     e->GetEntry(ievt);
@@ -82,12 +91,15 @@ void h5_write_chars(char* rname,
       // if you have collected batch events, then do the write
       // nbatch will be different if in the last batch we see last event before end of batch 
       if(nbatch == batch || ievt == nevts-1) {
-        write_batch(products, ds_names, batch, nbatch, round, outname);
+        
+        write_batch(products, ds_names, batch, nbatch, round, lumi);
         nbatch = 0;
         ++round;
         products.clear();
       }
       ++ievt;
   }
+
+  file.flush();
 }
 #endif
