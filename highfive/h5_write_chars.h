@@ -5,22 +5,12 @@
 #include <highfive/H5DataType.hpp>
 #include <highfive/H5File.hpp>
 
+#include "h5_write_1D_chars.h"
 #include "serialize_dataprods.h"
+#include "utilities.h"
 
 using namespace HighFive;
 using product_t = std::vector<char>;
-
-
-std::vector<product_t> 
-get_prods(std::vector<product_t> const & input, 
-         int prod_index, 
-         int stride) {
-  std::vector<product_t> tmp; 
-  for(int j = prod_index; j< input.size(); j+=stride) {
-    tmp.push_back(input[j]);
-  }
-  return tmp;
-}
 
 void
 write_batch(std::vector<product_t> const& products, 
@@ -33,23 +23,39 @@ write_batch(std::vector<product_t> const& products,
   auto num_prods = ds_names.size();
   for (int prod_index = 0; prod_index < num_prods; ++prod_index) {
     auto prod_size = products[prod_index].size(); 
+    auto tmp = get_prods(products, prod_index, num_prods);
+    auto sizes = get_sizes(tmp);
+    auto ds_name = ds_names[prod_index];
     if(!lumi.exist(ds_names[prod_index])){ //if dataset doesn't exist, create it otherwise extend it
-      std::cout << "creating dataset for: " << ds_names[prod_index] << "\n";
+      std::cout << "creating dataset for: " << ds_name << "\n";
       DataSetCreateProps props;
       props.add(Chunking(std::vector<hsize_t>{batch, prod_size}));
-      DataSpace dataspace = DataSpace({batch, prod_size}, {DataSpace::UNLIMITED, prod_size});
-      DataSet dataset = lumi.createDataSet<char>(ds_names[prod_index], dataspace, props); 
-      dataset.write(get_prods(products, prod_index, num_prods));
+      DataSpace dataspace = DataSpace({1, prod_size}, {DataSpace::UNLIMITED, DataSpace::UNLIMITED});
+      DataSet dataset = lumi.createDataSet<char>(ds_name, dataspace, props); 
+      //resize the dataset to match the ragged array
+      //currently only works for batch size 1
+      for (auto i = 1; i<batch; ++i){
+        dataset.resize({i+1, sizes[i]});
+        }
+        dataset.write(tmp);
       }
     else {
       DataSet dataset = lumi.getDataSet(ds_names[prod_index]);
       std::cout << "extending dataset for: " << dataset.getPath() << "\n";
       auto offset = batch*round;
-      dataset.resize({offset+nbatch, prod_size}); 
-      dataset.select({offset, 0}, {nbatch, prod_size}).write(get_prods(products, prod_index, num_prods));
-      }
+      for (auto i = 0; i<nbatch; ++i){
+        dataset.resize({offset+i+1, sizes[i]}); 
+    }
+    dataset.select({offset, 0}, {nbatch, prod_size}).write(tmp); //get_prods(products, prod_index, num_prods));
+  }
+  DataSet reads = lumi.getDataSet(ds_names[prod_index]);
+  std::vector<std::vector<char>> chars;
+  reads.read(chars);
+  for (int i=0; i<chars.size(); ++i)
+    std::cout << "read size: "<< chars[i].size() << "\n";
   }
 }
+
 
 void h5_write_ds(char* rname, 
                  int batch, 
@@ -92,7 +98,8 @@ void h5_write_ds(char* rname,
       // nbatch will be different if in the last batch we see last event before end of batch 
       if(nbatch == batch || ievt == nevts-1) {
         
-        write_batch(products, ds_names, batch, nbatch, round, lumi);
+        //write_batch(products, ds_names, batch, nbatch, round, lumi);
+        write_1D_chars(products, ds_names, batch, nbatch, round, lumi);
         nbatch = 0;
         ++round;
         products.clear();
@@ -102,4 +109,5 @@ void h5_write_ds(char* rname,
 
   file.flush();
 }
+
 #endif
