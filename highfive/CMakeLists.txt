@@ -5,14 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories (SYSTEM 
-                    $ENV{MPI_INC}
+                    $ENV{MPICH_INC}
                     $ENV{HDF5_INC}
                     $ENV{HIGHFIVE_INC}
                     $ENV{ROOTSYS}/include
                     $ENV{CMSSW_BASE}/src)
 link_directories ($ENV{ROOTSYS}/lib)
 set (libraries ${libraries} 
-               $ENV{MPI_LIB}/libmpi.so
+               $ENV{MPICH_LIB}/libmpi.so
                $ENV{HDF5_LIB}/libhdf5.so
                Core
                RIO
