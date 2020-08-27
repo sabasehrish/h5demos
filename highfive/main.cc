@@ -10,7 +10,8 @@ int main(int argc, char* argv[]) {
   int batch_size = atoi(argv[3]);
   auto run_num = 1;
   auto lumi_num = 1;
-  h5_write_ds(input_root_fname, batch_size, run_num, lumi_num, output_h5_fname);
+  //batch_size is currently one, writing one element at a time!!!
+  h5_write_ds(input_root_fname, 1, run_num, lumi_num, output_h5_fname);
   return 0;
 }
 
